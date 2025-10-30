@@ -86,7 +86,8 @@ curl -X POST http://localhost:3000/api/VerifyCommitmentHash \
 
 ```env
 ALCHEMY_API_KEY=your_alchemy_api_key
-CONTRACT_ADDRESS=your_nft_contract_address
+CONTRACT_ADDRESS=0x8728F6f66ceAb2f092BBde42DaB380b97b349d19
+NEXT_PUBLIC_ADMIN_ADDRESS=your_admin_address
 ```
 
 ## Development
