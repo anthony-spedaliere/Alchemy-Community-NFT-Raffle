@@ -1,4 +1,4 @@
-import { walletClient, getAccount } from '../../lib/config'
+import { getAccount, getWalletClient } from '../../lib/config'
 import { publicClient } from '../api/client'
 import { Abi } from '../api/abi'
 import { encodeFunctionData } from 'viem'
@@ -23,6 +23,7 @@ export async function startRaffle(
         });
 
         // Send the transaction directly without simulation
+        const walletClient = getWalletClient();
         const hash = await walletClient.sendTransaction({
             account,
             to: process.env.NEXT_PUBLIC_RAFFLE_CONTRACT_ADDRESS as `0x${string}`,
