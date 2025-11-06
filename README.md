@@ -1,301 +1,127 @@
-# Alchemy Community NFT Raffle
-
-A decentralized raffle system built on Ethereum using Chainlink Functions and VRF for fair random winner selection. This project integrates with external APIs to fetch NFT ownership data and determine raffle entries based on NFT holdings.
-
-## Features
-
-- **Decentralized Raffle System**: Smart contract-based raffle with on-chain randomness
-- **NFT-Based Entries**: Entries calculated based on Alchemy Community NFT ownership
-- **Chainlink Integration**: Uses Chainlink Functions for API calls and VRF for randomness
-- **Admin Dashboard**: Web interface for administrators to manage raffles
-- **Commitment Hash Verification**: Ensures raffle integrity with cryptographic commitments
-- **Modern Frontend**: Built with Next.js, React, and Tailwind CSS
-
-## Tech Stack
-
-### Smart Contracts
-- **Solidity**: ^0.8.19
-- **Foundry**: For Smart Contract development
-- **Chainlink Functions**: For external API calls
-- **Chainlink VRF**: For verifiable randomness
-
-### Frontend
-- **Next.js**: 16.0.1 (React framework)
-- **React**: 19.2.0
-- **TypeScript**: For type safety
-- **RainbowKit**: Wallet connection UI
-- **Wagmi**: Ethereum interactions
-- **Tailwind CSS**: Styling
-
-## Prerequisites
-
-Before setting up the project, ensure you have the following installed:
-
-- **Node.js**: Version 18 or higher
-- **Foundry**: Ethereum development toolkit
-- **Git**: For cloning the repository
-- **Alchemy API Key**: For NFT data fetching
-- **Ethereum Wallet**: With Sepolia testnet ETH
-
-## Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/leetebbs/Alchemy-Community-NFT-Raffle.git
-   cd Alchemy-Community-NFT-Raffle
-   ```
-
-2. **Install contract dependencies:**
-   ```bash
-   cd contracts
-   forge install
-   ```
-
-3. **Install frontend dependencies:**
-   ```bash
-   cd ../frontend
-   npm install
-   ```
-
-## Environment Setup
-
-### Frontend Environment Variables
-
-Create a `.env` file in the `frontend` directory:
-
-```env
-# Alchemy API Key for NFT data
-ALCHEMY_API_KEY=your_alchemy_api_key_here
-
-# Deployed contract address
-CONTRACT_ADDRESS=your_deployed_contract_address
-
-# Admin wallet address (lowercase)
-NEXT_PUBLIC_ADMIN_ADDRESS=your_admin_wallet_address
-
-# Optional: Chainlink subscription IDs (for reference)
-FUNCTIONS_SUBSCRIPTION_ID=your_functions_subscription_id
-VRF_SUBSCRIPTION_ID=your_vrf_subscription_id
-```
-
-### Contract Environment Variables
-
-For deployment scripts, you'll need:
-
-- Private key for deployment
-- RPC URL (e.g., Sepolia Infura/Alchemy)
-- Chainlink subscription IDs
-
-## Chainlink Setup (Admin Required)
-
-### 1. Create Chainlink Functions Subscription
-
-1. Go to [Chainlink Functions](https://functions.chain.link/)
-2. Connect your wallet
-3. Create a new subscription
-4. Fund the subscription with LINK tokens (on Sepolia testnet)
-5. Note the subscription ID
-
-### 2. Create Chainlink VRF Subscription
-
-1. Go to [Chainlink VRF](https://vrf.chain.link/)
-2. Connect your wallet
-3. Create a new subscription
-4. Fund with LINK tokens
-5. Note the subscription ID
-
-### 3. Configure VRF Consumer
-
-- Use the VRF v2.5 consumer
-- For Sepolia testnet:
-  - Key Hash: `0x787d74caea10b2b357790d5b5247c2f63d1d91572`
-  - Gas Limit: 800,000
-  - Confirmations: 3
-
-## Contract Deployment (Admin)
-
-1. **Navigate to contracts directory:**
-   ```bash
-   cd contracts
-   ```
-
-2. **Create deployment script** (if not exists):
-   Create `script/Deploy.s.sol`:
-   ```solidity
-   // SPDX-License-Identifier: MIT
-   pragma solidity ^0.8.19;
-
-   import {Script} from "forge-std/Script.sol";
-   import {AlchemyRaffle} from "../src/AlchemyRaffle.sol";
-
-   contract DeployScript is Script {
-       function run() external {
-           uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-           vm.startBroadcast(deployerPrivateKey);
-
-           // Deploy contract with your subscription IDs
-           AlchemyRaffle raffle = new AlchemyRaffle(
-               0x649a2C205BE7A3d5e99206CEEFF30c794f0E31dD, // router address
-               vm.envUint("FUNCTIONS_SUBSCRIPTION_ID"),
-               vm.envBytes32("FUNCTIONS_DON_ID"),
-               vm.envUint("VRF_SUBSCRIPTION_ID"),
-               vm.envBytes32("VRF_KEY_HASH")
-           );
-
-           vm.stopBroadcast();
-       }
-   }
-   ```
-
-3. **Set environment variables for deployment:**
-   ```bash
-   export PRIVATE_KEY=your_private_key_without_0x
-   export FUNCTIONS_SUBSCRIPTION_ID=your_functions_subscription_id
-   export FUNCTIONS_DON_ID=0x66756e2d657468657265756d2d7365706f6c69612d3100000000000000000000
-   export VRF_SUBSCRIPTION_ID=your_vrf_subscription_id
-   export VRF_KEY_HASH=0x787d74caea10b2b357790d5b5247c2f63d1d91572
-   ```
-
-4. **Deploy to Sepolia:**
-   ```bash
-   forge script script/Deploy.s.sol --rpc-url https://sepolia.infura.io/v3/YOUR_INFURA_KEY --broadcast --verify
-   ```
-
-5. **Note the deployed contract address** and update your `.env.local` file.
-
-## Running the Application
-
-### Frontend Development Server
-
-```bash
-cd frontend
-npm run dev
-```
-
-The application will be available at `http://localhost:3000`
-
-### Contract Testing
-
-```bash
-cd contracts
-forge test
-```
-
-### Contract Building
-
-```bash
-cd contracts
-forge build
-```
-
-## Admin Guide
-
-### Accessing Admin Dashboard
-
-1. Navigate to `http://localhost:3000/admin` (or deployed URL)
-2. Connect your wallet using the "Connect Wallet" button
-3. Ensure your wallet address matches `NEXT_PUBLIC_ADMIN_ADDRESS`
-
-### Starting a Raffle
-
-1. **Enter NFT IDs**: Comma-separated list of eligible NFT token IDs (e.g., "137,138,139")
-2. **Optional Month**: Specify a month for themed raffles
-3. **Fetch Entries**: Click to preview total entries and commitment hash
-4. **Start Raffle**: Initiate the raffle process on-chain
-
-### Raffle Process
-
-1. **Entry Calculation**: Chainlink Functions fetches NFT ownership data
-2. **Commitment Hash**: Generated for raffle integrity
-3. **Random Selection**: VRF provides randomness for winner selection
-4. **Winner Announcement**: Winner address revealed on-chain
-
-### Monitoring Raffles
-
-- View raffle history and status
-- Check pending requests and errors
-- Verify commitment hashes for transparency
-
-## API Endpoints
-
-### `/api/FetchNumberOfEntries`
-- **Method**: POST
-- **Purpose**: Calculate total raffle entries based on NFT ownership
-- **Parameters**:
-  - `nftIds`: Array of NFT token IDs
-  - `shuffle`: Boolean for randomizing entries
-  - `includeEntries`: Boolean to return entry list
-
-### `/api/FetchWinnerAddress`
-- **Method**: GET
-- **Purpose**: Retrieve winner address for a raffle
-- **Parameters**: Raffle ID
-
-### `/api/VerifyCommitmentHash`
-- **Method**: POST
-- **Purpose**: Verify raffle integrity
-- **Parameters**: Commitment hash and raffle data
-
-## Project Structure
-
-```
-alch-raffle-demo-v3/
-├── contracts/                 # Foundry project
-│   ├── src/
-│   │   └── AlchemyRaffle.sol  # Main contract
-│   ├── lib/                   # Dependencies
-│   ├── test/                  # Contract tests
-│   └── foundry.toml          # Foundry config
-├── frontend/                  # Next.js application
-│   ├── app/
-│   │   ├── api/               # API routes
-│   │   ├── admin/             # Admin dashboard
-│   │   └── components/        # React components
-│   ├── lib/                   # Utilities
-│   └── package.json
-└── README.md                  # This file
-```
-
-## Security Considerations
-
-- **Private Keys**: Never commit private keys to version control
-- **Environment Variables**: Keep API keys and sensitive data in environment files
-- **Admin Access**: Restrict admin functions to authorized addresses
-- **Chainlink Subscriptions**: Monitor subscription balances
-- **Contract Verification**: Verify contracts on Etherscan for transparency
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Chainlink Functions Timeout**: Increase gas limit or check subscription balance
-2. **VRF Request Failure**: Verify subscription ID and funding
-3. **API Rate Limits**: Monitor Alchemy API usage
-4. **Wallet Connection Issues**: Ensure MetaMask is connected to Sepolia
-
-### Debug Tools
-
-- Use `forge test` for contract testing
-- Check contract events on Etherscan
-- Monitor Chainlink subscription dashboards
-- Use browser dev tools for frontend debugging
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support or questions:
-- Create an issue on GitHub
-- Check the Chainlink documentation
-- Review Foundry documentation</content>
-<filePath">/home/tebbo/alch-raffle-demo-v3/README.md
+Alchemy Community NFT Raffle
+================================
+
+Alchemy Community NFT Raffle is a full-stack dApp that lets Alchemy University communities run transparent monthly giveaways. A Chainlink Functions + VRF powered smart contract proves fairness on-chain, while a Next.js dashboard handles admin tooling, entry audits, and winner announcements.
+
+Contents
+--------
+- [How It Works](#how-it-works)
+- [Project Layout](#project-layout)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Smart Contract Suite (`contracts/`)](#smart-contract-suite-contracts)
+- [Frontend (`frontend/`)](#frontend-frontend)
+- [Chainlink Integrations](#chainlink-integrations)
+- [API Utilities](#api-utilities)
+- [Verification & Auditing](#verification--auditing)
+- [Troubleshooting & Notes](#troubleshooting--notes)
+- [Acknowledgements](#acknowledgements)
+
+How It Works
+------------
+- Admin launches a raffle for a specific month with the qualifying NFT token IDs.
+- Chainlink Functions fetches live owner data from the Alchemy NFT API, returning total entries plus a commitment hash of all participants.
+- Chainlink VRF v2.5 draws a provably fair winner index from those entries.
+- Chainlink Functions is called again to resolve the shuffled winner wallet and store it on-chain.
+- The Next.js site exposes public pages for the active raffle, past winners, and an admin-only control panel.
+
+Project Layout
+--------------
+- `contracts/` — Foundry project with the `AlchemyRaffle` contract, deployment script, and Chainlink integrations.
+- `frontend/` — Next.js 16 app (App Router) with RainbowKit, Wagmi, and server routes for Alchemy/Chainlink interop.
+
+Prerequisites
+-------------
+- Node.js 20+ and npm
+- Foundry toolchain (`forge`, `cast`, `anvil`) — install via <https://book.getfoundry.sh/getting-started/installation>
+- An Alchemy (or compatible) RPC endpoint and NFT API key for your target network
+- Chainlink Functions and VRF subscriptions funded on your target network
+- WalletConnect Cloud project ID for RainbowKit (WalletConnect v2)
+
+Quick Start
+-----------
+1. **Clone the repo**
+	 ```bash
+	 git clone https://github.com/leetebbs/Alchemy-Community-NFT-Raffle.git
+	 cd Alchemy-Community-NFT-Raffle
+	 ```
+2. **Configure environments**
+	 - Copy `contracts/.env.example` to `contracts/.env` and fill in Chainlink + RPC details.
+	 - Create `frontend/.env.local` with the variables listed in [Frontend](#frontend-frontend).
+3. **Build contracts & launch frontend**
+	 ```bash
+	 cd contracts
+	 forge install
+	 forge build
+
+	 cd ../frontend
+	 npm install
+	 npm run dev
+	 ```
+4. Visit `http://localhost:3000` to interact with the UI.
+
+Smart Contract Suite (`contracts/`)
+----------------------------------
+- **Source:** `src/AlchemyRaffle.sol` extends `FunctionsClient` and `VRFConsumerBaseV2Plus` to coordinate entry retrieval and random selection.
+- **Key features**
+	- Tracks raffle rounds, entry counts, commitment hashes, and winner metadata.
+	- Calls Chainlink Functions twice: first to fetch entries + commitment, second to resolve the winner address.
+	- Uses Chainlink VRF v2.5 for randomness; winner index is stored before requesting the second Functions call.
+- **Deploy**
+	- Populate `contracts/.env`.
+	- Run `forge script script/DeployAlchemyRaffle.s.sol:DeployAlchemyRaffle --rpc-url <network> --broadcast` (see `contracts/README.md` for network aliases and post-deploy checklist).
+	- Authorize the deployed address on both the Chainlink Functions and VRF subscriptions.
+
+Frontend (`frontend/`)
+----------------------
+- **Stack:** Next.js 16 (App Router), Tailwind CSS (v4), RainbowKit, Wagmi + viem, React Query.
+- **Pages**
+	- `/` — Public landing page with live winner/raffle info pulled from the contract via API routes.
+	- `/admin` — Wallet-gated controls to fetch eligible entries and trigger `startRaffle` from the connected admin wallet.
+	- `/pastWinners` — Historical winners hydrated from the contract `getWinnerByRaffleId` view.
+- **Environment variables** (create `frontend/.env.local`)
+	```bash
+	NEXT_PUBLIC_RAFFLE_CONTRACT_ADDRESS=0xYourDeployedContract
+	NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_walletconnect_project_id
+	ALCHEMY_RAFFLE_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your_key
+	ALCHEMY_API_KEY=your_polygon_nft_api_key
+	CONTRACT_ADDRESS=0x8728F6f66ceAb2f092BBde42DaB380b97b349d19_alchemy_comunity_call_nft_contract_address
+	```
+	Optional extras: `RAFFLE_CONTRACT_NETWORK` if you expose multiple environments.
+- **Development**
+	- `npm run dev` — start local Next.js server.
+	- `npm run build` / `npm start` — production build + serve.
+- **Wallet flow** — `App.tsx` wires RainbowKit + Wagmi (Sepolia chain). The admin action `startRaffle` encodes a transaction with viem’s `encodeFunctionData` and sends it through the connected wallet.
+
+Chainlink Integrations
+----------------------
+- **Functions**
+	- Inline JavaScript requests live entry data from `https://alchemy-community-nft-raffle.vercel.app/api/FetchNumberOfEntries`.
+	- Response must include total entry count and a commitment hash to seal the participant set.
+	- Secondary request returns the shuffled winner address for the previously drawn index.
+- **VRF v2.5**
+	- Uses network-specific `keyHash`, `coordinator`, and subscription IDs configured in the deployment script.
+	- `fulfillRandomWords` stores a single random word, derives the winner index, and dispatches the follow-up Functions call.
+
+API Utilities
+-------------
+- `app/api/FetchNumberOfEntries` — Server action that hits the Polygon NFT API, aggregates ownership counts, shuffles entries (optional), and mirrors the commitment logic used on-chain.
+- `app/api/FetchWinnerAddress` — Reads the latest raffle struct from the contract and formats winner metadata for the landing page.
+- `app/api/FetchPastWinners` — Iterates raffles via viem to build the public winners list.
+- `app/api/VerifyCommitmentHash` — Recomputes commitment hashes from NFT data or provided entry arrays for transparency/audits.
+
+Verification & Auditing
+-----------------------
+- **Commitment hash proofs** — Compare the hash emitted during `startRaffle` with `VerifyCommitmentHash` responses to ensure the entry list was unchanged.
+- **Admin safeguards** — The admin page double-checks wallet ownership before exposing controls.
+
+Troubleshooting & Notes
+-----------------------
+- Ensure the NFT collection lives on the same network as the Alchemy NFT API you query (defaults to Polygon mainnet)..
+- Winner resolution is asynchronous; expect ~3 minutes between raffle start and final on-chain winner data depending on oracle fulfilment.
+
+Acknowledgements
+----------------
+- Built with the Alchemy University community in mind.
+- Chainlink Functions & VRF teams for oracle infrastructure.
+- RainbowKit, Wagmi, and viem for wallet & chain tooling.

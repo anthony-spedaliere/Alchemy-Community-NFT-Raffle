@@ -13,11 +13,6 @@ npm run dev
 
 ## Environment Setup
 
-Copy `.env.example` to `.env.local` and fill in your configuration:
+Copy `.env.example` to `.env` and fill in your configuration:
 
-```env
-ALCHEMY_API_KEY=your_api_key
-CONTRACT_ADDRESS=deployed_contract_address
-NEXT_PUBLIC_ADMIN_ADDRESS=admin_wallet_address
-```</content>
-<filePath">/home/tebbo/alch-raffle-demo-v3/frontend/README.md
+
