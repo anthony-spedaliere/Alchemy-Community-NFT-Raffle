@@ -117,11 +117,11 @@ export default function Home() {
                     <p className="text-sm font-semibold opacity-90">Limited Edition</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-4xl font-bold">NFT</p>
+                    <p className="text-4xl font-bold">Mystery Swag Box</p>
                     <p className="text-sm mt-2 opacity-75">Community Exclusive</p>
                   </div>
                   <div className="flex justify-between text-xs opacity-75">
-                    <span>Alchemy U</span>
+                    <span>Alchemy Builders</span>
                     <span>2025</span>
                   </div>
                 </div>

@@ -33,7 +33,7 @@ export async function startRaffle(
 
         console.log("Transaction sent:", hash);
 
-        alert(`Raffle for ${month} started with ${nftIds.length} NFT entries! Transaction hash: ${hash}`);
+        alert(`Raffle for ${month} started with ${nftIds.length} NFT entries! Transaction hash: ${hash}. This may take upto 3 mins to reflect on-chain.`);
     } catch (error) {
         console.error("Error starting raffle:", error);
         console.error("Error details:", JSON.stringify(error, null, 2));
