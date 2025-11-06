@@ -91,7 +91,7 @@ export default function Home() {
           <div className="space-y-8">
             <div className="space-y-4">
               <div className="inline-block px-4 py-2 bg-blue-100 rounded-full">
-                <p className="text-sm font-semibold text-blue-700">✨ {currentRaffle.month} Raffle</p>
+                <p className="text-sm font-semibold text-blue-700">✨ {latestWinner.month} Raffle</p>
               </div>
               <h2 className="text-5xl md:text-6xl font-bold leading-tight text-blue-900 text-balance">
                 Win Premium{" "}
