@@ -1,9 +1,19 @@
 "use client";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount } from 'wagmi'
+import { useAccount, useReadContract } from 'wagmi'
 import { useState } from 'react'
 import { startRaffle } from "../components/startRaffle";
 import { StarIcon, TrophyIcon, ShieldIcon } from "lucide-react";
+
+const contractABI = [
+  {
+    inputs: [],
+    name: 'adminAddress',
+    outputs: [{ type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
 
 type EntriesResponse = {
     totalEntries: number;
@@ -18,7 +28,14 @@ type EntriesResponse = {
 
 export default function AdminPage() {
     const { address, isConnected } = useAccount();
-    const adminAddress = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
+    
+    const { data: contractAdminAddress, isLoading: adminLoading } = useReadContract({
+        address: process.env.NEXT_PUBLIC_RAFFLE_CONTRACT_ADDRESS as `0x${string}`,
+        abi: contractABI,
+        functionName: 'adminAddress',
+    });
+
+    const adminAddress = contractAdminAddress?.toLowerCase();
     
     const [nftIds, setNftIds] = useState('');
     const [month, setMonth] = useState('');
@@ -115,7 +132,11 @@ export default function AdminPage() {
 
             {/* Main Content */}
             <section className="relative z-10 max-w-6xl mx-auto px-4 py-16">
-                {isConnected && address?.toLowerCase() === adminAddress ? (
+                {adminLoading ? (
+                    <div className="text-center">
+                        <p className="text-lg text-blue-700">Loading admin verification...</p>
+                    </div>
+                ) : isConnected && address?.toLowerCase() === adminAddress ? (
                     <div className="space-y-8">
                         {/* Welcome Message */}
                         <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-2xl p-8 md:p-12 border-2 border-green-200 glow">
