@@ -16,6 +16,9 @@ export default function Home() {
     const fetchWinner = async () => {
       try {
         const response = await fetch('/api/FetchWinnerAddress');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         setWinnerAddress(data.winnerAddress);
         if (data.month) setMonth(data.month);
@@ -88,7 +91,7 @@ export default function Home() {
           <div className="space-y-8">
             <div className="space-y-4">
               <div className="inline-block px-4 py-2 bg-blue-100 rounded-full">
-                <p className="text-sm font-semibold text-blue-700">✨ {currentRaffle.month} Raffle</p>
+                <p className="text-sm font-semibold text-blue-700">✨ {latestWinner.month} Raffle</p>
               </div>
               <h2 className="text-5xl md:text-6xl font-bold leading-tight text-blue-900 text-balance">
                 Win Premium{" "}
@@ -114,11 +117,11 @@ export default function Home() {
                     <p className="text-sm font-semibold opacity-90">Limited Edition</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-4xl font-bold">NFT</p>
+                    <p className="text-4xl font-bold">Mystery Swag Box</p>
                     <p className="text-sm mt-2 opacity-75">Community Exclusive</p>
                   </div>
                   <div className="flex justify-between text-xs opacity-75">
-                    <span>Alchemy U</span>
+                    <span>Alchemy Builders</span>
                     <span>2025</span>
                   </div>
                 </div>
@@ -175,14 +178,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-blue-100 bg-white/50 backdrop-blur-sm mt-20">
-        <div className="max-w-6xl mx-auto px-4 py-8 text-center text-sm text-blue-700">
-          <p>© 2025 Alchemy University BFT Raffle. All rights reserved.</p>
-          <p className="mt-2 text-blue-600">Powered by blockchain technology · Transparent & Fair</p>
-        </div>
-      </footer>
     </main>
   );
 }

@@ -40,6 +40,17 @@ export default function Navbar() {
                 Home
               </Link>
               <Link 
+                href="/pastWinners"
+                onClick={() => setActiveLink('pastWinners')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                  activeLink === 'pastWinners'
+                    ? 'bg-white text-blue-600'
+                    : 'bg-white/10 text-white hover:bg-white/25 backdrop-blur-sm'
+                }`}
+              >
+                Past Winners
+              </Link>
+                            <Link 
                 href="/admin"
                 onClick={() => setActiveLink('admin')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${

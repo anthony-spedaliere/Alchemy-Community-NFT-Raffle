@@ -1,7 +1,19 @@
 "use client";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount } from 'wagmi'
+import { useAccount, useReadContract } from 'wagmi'
 import { useState } from 'react'
+import { startRaffle } from "../components/startRaffle";
+import { StarIcon, TrophyIcon, ShieldIcon } from "lucide-react";
+
+const contractABI = [
+  {
+    inputs: [],
+    name: 'adminAddress',
+    outputs: [{ type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
 
 type EntriesResponse = {
     totalEntries: number;
@@ -16,17 +28,25 @@ type EntriesResponse = {
 
 export default function AdminPage() {
     const { address, isConnected } = useAccount();
-    const adminAddress = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
+    
+    const { data: contractAdminAddress, isLoading: adminLoading } = useReadContract({
+        address: process.env.NEXT_PUBLIC_RAFFLE_CONTRACT_ADDRESS as `0x${string}`,
+        abi: contractABI,
+        functionName: 'adminAddress',
+    });
+
+    const adminAddress = contractAdminAddress?.toLowerCase();
     
     const [nftIds, setNftIds] = useState('');
+    const [month, setMonth] = useState('');
     const [shuffle, setShuffle] = useState(true);
     const [loading, setLoading] = useState(false);
     const [entriesData, setEntriesData] = useState<EntriesResponse | null>(null);
     const [error, setError] = useState('');
 
-    const startRaffle = () => {
-        // Placeholder function for starting the raffle
-        alert('Raffle started with ' + (entriesData ? entriesData.totalEntries : 0) + ' entries!');
+    const handleStartRaffle = () => {
+        // Call the imported startRaffle function
+        startRaffle(nftIds.split(',').map(id => id.trim()), month);
     }
 
     const fetchEntries = async () => {
@@ -67,103 +87,157 @@ export default function AdminPage() {
     };
     
     return (
-        <div className="flex flex-col items-center min-h-screen p-5">
-            <h1 className="text-3xl font-bold mb-8">Admin Page</h1>
-            
-            <div className="mb-8">
-                <ConnectButton />
+        <main className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-50 overflow-hidden">
+            {/* Animated Stars Background */}
+            <div className="fixed inset-0 pointer-events-none">
+                <div className="absolute top-10 left-10 star">
+                    <StarIcon className="w-6 h-6 text-blue-400" />
+                </div>
+                <div className="absolute top-20 right-20 star" style={{ animationDelay: "1s" }}>
+                    <StarIcon className="w-4 h-4 text-blue-300" />
+                </div>
+                <div className="absolute top-40 left-1/4 star" style={{ animationDelay: "2s" }}>
+                    <StarIcon className="w-5 h-5 text-blue-500" />
+                </div>
+                <div className="absolute top-1/3 right-1/4 star" style={{ animationDelay: "0.5s" }}>
+                    <StarIcon className="w-6 h-6 text-blue-400" />
+                </div>
+                <div className="absolute bottom-1/3 left-20 star" style={{ animationDelay: "1.5s" }}>
+                    <StarIcon className="w-5 h-5 text-blue-300" />
+                </div>
+                <div className="absolute bottom-20 right-1/3 star" style={{ animationDelay: "2.5s" }}>
+                    <StarIcon className="w-4 h-4 text-blue-500" />
+                </div>
             </div>
 
-            {isConnected && address?.toLowerCase() === adminAddress ? (
-                <div className="w-full max-w-4xl space-y-6">
-                    <div className="p-6 bg-green-100 border border-green-300 rounded-lg">
-                        <h2 className="text-xl font-semibold text-green-800 mb-2">✅ Welcome, Admin!</h2>
-                        <p className="text-green-700">You have admin access to the raffle system.</p>
+            {/* Hero Section */}
+            <section className="relative z-10 max-w-6xl mx-auto px-4 py-20 md:py-32">
+                <div className="text-center space-y-8">
+                    <div className="space-y-4">
+                        <h1 className="text-5xl md:text-6xl font-bold leading-tight text-blue-900 text-balance">
+                            Manage the{" "}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">
+                                Alchemy Raffle
+                            </span>
+                        </h1>
+                        <p className="text-lg text-blue-700 leading-relaxed text-pretty max-w-2xl mx-auto">
+                            Admin controls for fetching entries, starting raffles, and managing the community prize draws.
+                        </p>
                     </div>
+                    <div className="flex justify-center">
+                        <ConnectButton />
+                    </div>
+                </div>
+            </section>
 
-                    {/* Fetch Entries Section */}
-                    <div className="p-6 border border-gray-300 rounded-lg shadow-md">
-                        <h3 className="text-lg font-semibold mb-4">Fetch Raffle Entries</h3>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    NFT IDs (comma-separated)
-                                </label>
-                                <input
-                                    type="text"
-                                    value={nftIds}
-                                    onChange={(e) => setNftIds(e.target.value)}
-                                    placeholder="136, 137, 138, 139"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
+            {/* Main Content */}
+            <section className="relative z-10 max-w-6xl mx-auto px-4 py-16">
+                {adminLoading ? (
+                    <div className="text-center">
+                        <p className="text-lg text-blue-700">Loading admin verification...</p>
+                    </div>
+                ) : isConnected && address?.toLowerCase() === adminAddress ? (
+                    <div className="space-y-8">
+                        {/* Welcome Message */}
+                        <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-2xl p-8 md:p-12 border-2 border-green-200 glow">
+                            <div className="flex items-center gap-3 mb-6">
+                                <TrophyIcon className="w-8 h-8 text-green-600" />
+                                <h3 className="text-2xl md:text-3xl font-bold text-green-900">Welcome, Admin!</h3>
                             </div>
-{/* 
-                            <div className="flex items-center space-x-2">
-                                <input
-                                    type="checkbox"
-                                    id="shuffle"
-                                    checked={shuffle}
-                                    onChange={(e) => setShuffle(e.target.checked)}
-                                    className="rounded"
-                                />
-                                <label htmlFor="shuffle" className="text-sm font-medium text-gray-700">
-                                    Shuffle entries
-                                </label>
-                            </div> */}
+                            <p className="text-lg text-green-700">You have full access to manage the raffle system.</p>
+                        </div>
 
-                            <button
-                                onClick={fetchEntries}
-                                disabled={loading}
-                                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                            >
-                                {loading ? 'Fetching...' : 'Fetch Entries'}
-                            </button>
+                        {/* Fetch Entries Section */}
+                        <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-blue-200">
+                            <h3 className="text-2xl font-bold text-blue-900 mb-6">Fetch Raffle Entries</h3>
+                            
+                            <div className="grid md:grid-cols-2 gap-6 mb-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-blue-700 mb-2">
+                                        Month
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={month}
+                                        onChange={(e) => setMonth(e.target.value)}
+                                        placeholder="e.g., November 2025"
+                                        className="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-blue-50 text-blue-900"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-blue-700 mb-2">
+                                        NFT IDs (comma-separated)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={nftIds}
+                                        onChange={(e) => setNftIds(e.target.value)}
+                                        placeholder="136, 137, 138, 139"
+                                        className="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-blue-50 text-blue-900"
+                                    />
+                                </div>
+                            </div>
 
-                            {entriesData && (
+                            <div className="flex gap-4 mb-6">
                                 <button
-                                    onClick={startRaffle}
-                                    className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
+                                    onClick={fetchEntries}
+                                    disabled={loading}
+                                    className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold transition-colors"
                                 >
-                                    Start Raffle
+                                    {loading ? 'Fetching...' : 'Fetch Entries'}
                                 </button>
+
+                                {entriesData && (
+                                    <button
+                                        onClick={handleStartRaffle}
+                                        className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 font-semibold transition-colors"
+                                    >
+                                        Start Raffle
+                                    </button>
+                                )}
+                            </div>
+
+                            {error && (
+                                <div className="p-4 bg-red-100 border-2 border-red-300 rounded-lg text-red-700 font-semibold">
+                                    {error}
+                                </div>
                             )}
                         </div>
 
-                        {error && (
-                            <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded text-red-700">
-                                {error}
-                            </div>
-                        )}
-
+                        {/* Results Section */}
                         {entriesData && (
-                            <div className="mt-6 space-y-4">
-                                <div className="p-4 bg-gray-10 rounded-lg">
-                                    <h4 className="font-semibold mb-2">Summary</h4>
-                                    <p><strong>Total Entries:</strong> {entriesData.totalEntries}</p>
-                                    <p><strong>Commitment Hash (Hex):</strong> <span className="font-mono text-sm break-all">{entriesData.commitmentHash}</span></p>
-                                    <p><strong>Commitment Hash (Decimal):</strong> <span className="font-mono text-sm break-all">{BigInt('0x' + entriesData.commitmentHash).toString()}</span></p>
-                                    <p><strong>Unique Owners:</strong> {entriesData.ownerCounts.length}</p>
+                            <div className="grid md:grid-cols-3 gap-8">
+                                {/* Summary */}
+                                <div className="md:col-span-1 bg-white rounded-xl p-6 shadow-lg border-2 border-blue-200">
+                                    <h4 className="text-lg font-bold text-blue-900 mb-4">Summary</h4>
+                                    <div className="space-y-3">
+                                        <p className="text-blue-700"><span className="font-semibold">Total Entries:</span> {entriesData.totalEntries}</p>
+                                        <p className="text-blue-700"><span className="font-semibold">Unique Owners:</span> {entriesData.ownerCounts.length}</p>
+                                        <p className="text-blue-700 text-sm"><span className="font-semibold">Commitment Hash:</span></p>
+                                        <p className="font-mono text-xs break-all text-blue-600">{entriesData.commitmentHash}</p>
+                                    </div>
                                 </div>
 
-                                <div className="p-4 bg-gray-10 rounded-lg">
-                                    <h4 className="font-semibold mb-2">All Entries ({entriesData.entries.length})</h4>
-                                    <div className="max-h-40 overflow-y-auto">
+                                {/* All Entries */}
+                                <div className="md:col-span-1 bg-white rounded-xl p-6 shadow-lg border-2 border-blue-200">
+                                    <h4 className="text-lg font-bold text-blue-900 mb-4">All Entries ({entriesData.entries.length})</h4>
+                                    <div className="max-h-60 overflow-y-auto space-y-1">
                                         {entriesData.entries.map((entry, index) => (
-                                            <div key={index} className="text-sm font-mono py-1 border-b border-gray-200">
+                                            <div key={index} className="text-sm font-mono py-1 border-b border-blue-100 text-blue-700">
                                                 {index}: {entry}
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="p-4 bg-gray-10 rounded-lg">
-                                    <h4 className="font-semibold mb-2">Owner Counts</h4>
-                                    <div className="max-h-40 overflow-y-auto">
+                                {/* Owner Counts */}
+                                <div className="md:col-span-1 bg-white rounded-xl p-6 shadow-lg border-2 border-blue-200">
+                                    <h4 className="text-lg font-bold text-blue-900 mb-4">Owner Counts</h4>
+                                    <div className="max-h-60 overflow-y-auto space-y-2">
                                         {entriesData.ownerCounts.map((owner, index) => (
-                                            <div key={index} className="text-sm py-1 border-b border-gray-200">
-                                                <span className="font-mono">{owner.address}</span>
-                                                <span className="ml-2 text-gray-600">({owner.nftCount} NFTs: {owner.tokenIds.join(', ')})</span>
+                                            <div key={index} className="text-sm py-1 border-b border-blue-100 text-blue-700">
+                                                <span className="font-mono">{owner.address.slice(0, 8)}...{owner.address.slice(-6)}</span>
+                                                <span className="ml-2 text-blue-600">({owner.nftCount} NFTs)</span>
                                             </div>
                                         ))}
                                     </div>
@@ -171,19 +245,22 @@ export default function AdminPage() {
                             </div>
                         )}
                     </div>
-                </div>
-            ) : (
-                <div className="p-8 bg-red-100 border border-red-300 rounded-lg max-w-lg w-full text-center">
-                    <h2 className="text-xl font-semibold text-red-800 mb-2">❌ Access Denied</h2>
-                    <p className="text-red-700 mb-2">You are not authorized to view this page.</p>
-                    {!isConnected && (
-                        <p className="text-red-600">Please connect your wallet first.</p>
-                    )}
-                    {isConnected && address?.toLowerCase() !== adminAddress && (
-                        <p className="text-red-600">Your wallet address does not match the admin address.</p>
-                    )}
-                </div>
-            )}
-        </div>  
+                ) : (
+                    <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-2xl p-8 md:p-12 border-2 border-red-200 glow text-center max-w-2xl mx-auto">
+                        <div className="flex justify-center mb-6">
+                            <ShieldIcon className="w-16 h-16 text-red-600" />
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-bold text-red-900 mb-4">Access Denied</h2>
+                        <p className="text-lg text-red-700 mb-4">You are not authorized to view this admin page.</p>
+                        {!isConnected && (
+                            <p className="text-red-600 font-semibold">Please connect your wallet first.</p>
+                        )}
+                        {isConnected && address?.toLowerCase() !== adminAddress && (
+                            <p className="text-red-600 font-semibold">Your wallet address does not match the admin address.</p>
+                        )}
+                    </div>
+                )}
+            </section>
+        </main>
     );
 }
